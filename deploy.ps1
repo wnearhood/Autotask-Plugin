@@ -16,7 +16,7 @@ param (
 )
 
 # Configuration
-$pluginSlug = "autotask-plugin"
+$pluginSlug = "autotask-time-entry"
 $pluginDir = $PSScriptRoot
 $zipFileName = "$pluginSlug-$Version.zip"
 $buildDir = "$pluginDir\build"
@@ -34,7 +34,7 @@ if (!(Test-Path $distDir)) { New-Item -ItemType Directory -Path $distDir | Out-N
 
 # Update version in main plugin file
 Write-Host "Updating version number in plugin files..." -ForegroundColor Yellow
-$mainFile = "$pluginDir\autotask-plugin.php"
+$mainFile = "$pluginDir\autotask-time-entry.php"
 $readmeFile = "$pluginDir\readme.txt"
 
 # Update in main plugin file
@@ -61,15 +61,36 @@ if (!(Test-Path $pucMainFile)) {
     
     Expand-Archive -Path $pucZipFile -DestinationPath $tempExtractDir
     
+    # Make sure the target directory exists
+    $pucDir = "$pluginDir\includes\plugin-update-checker"
+    if (!(Test-Path $pucDir)) {
+        New-Item -ItemType Directory -Path $pucDir -Force | Out-Null
+    }
+    
     # Copy files to plugin directory
     $extractedDir = "$tempExtractDir\plugin-update-checker-master"
-    Copy-Item -Path "$extractedDir\*" -Destination "$pluginDir\includes\plugin-update-checker\" -Recurse -Force
+    if (Test-Path $extractedDir) {
+        Copy-Item -Path "$extractedDir\*" -Destination "$pucDir\" -Recurse -Force
+        Write-Host "Plugin Update Checker files copied to: $pucDir" -ForegroundColor Green
+    } else {
+        Write-Host "WARNING: Extracted directory not found at: $extractedDir" -ForegroundColor Yellow
+    }
+    
+    # List files to verify
+    Write-Host "Verifying Plugin Update Checker files:" -ForegroundColor Yellow
+    if (Test-Path "$pucDir\plugin-update-checker.php") {
+        Write-Host "  Main file found: plugin-update-checker.php" -ForegroundColor Green
+    } else {
+        Write-Host "  WARNING: Main file NOT found: plugin-update-checker.php" -ForegroundColor Red
+    }
     
     # Clean up
     Remove-Item -Path $pucZipFile -Force
     Remove-Item -Path $tempExtractDir -Recurse -Force
     
-    Write-Host "Plugin Update Checker downloaded and installed successfully." -ForegroundColor Green
+    Write-Host "Plugin Update Checker download completed." -ForegroundColor Green
+} else {
+    Write-Host "Plugin Update Checker already exists at: $pucMainFile" -ForegroundColor Green
 }
 
 # Create the zip file
@@ -118,6 +139,45 @@ Get-ChildItem -Path $pluginDir -Recurse -File | ForEach-Object {
 $zipFilePath = "$distDir\$zipFileName"
 if (Test-Path $zipFilePath) { Remove-Item -Path $zipFilePath -Force }
 Compress-Archive -Path "$tempDir\*" -DestinationPath $zipFilePath
+
+# Verify the PUC library is included in the zip
+$pucInZipPath = "$tempDir\includes\plugin-update-checker\plugin-update-checker.php"
+if (Test-Path $pucInZipPath) {
+    Write-Host "Plugin Update Checker is included in the zip file." -ForegroundColor Green
+} else {
+    Write-Host "WARNING: Plugin Update Checker is NOT in the zip file!" -ForegroundColor Red
+    Write-Host "This will cause errors when activating the plugin." -ForegroundColor Red
+    
+    # Try to fix it
+    Write-Host "Attempting to fix by copying PUC library to temp directory..." -ForegroundColor Yellow
+    $sourcePucDir = "$pluginDir\includes\plugin-update-checker"
+    $targetPucDir = "$tempDir\includes\plugin-update-checker"
+    
+    if (Test-Path $sourcePucDir) {
+        # Ensure target directory exists
+        if (!(Test-Path $targetPucDir)) {
+            New-Item -ItemType Directory -Path $targetPucDir -Force | Out-Null
+        }
+        
+        # Copy PUC files
+        Copy-Item -Path "$sourcePucDir\*" -Destination $targetPucDir -Recurse -Force
+        
+        # Recreate the zip file
+        Remove-Item -Path $zipFilePath -Force
+        Compress-Archive -Path "$tempDir\*" -DestinationPath $zipFilePath
+        
+        # Verify again
+        if (Test-Path "$tempDir\includes\plugin-update-checker\plugin-update-checker.php") {
+            Write-Host "Fixed: Plugin Update Checker is now included in the zip file." -ForegroundColor Green
+        } else {
+            Write-Host "WARNING: Still unable to include Plugin Update Checker in the zip file." -ForegroundColor Red
+            Write-Host "Please manually verify the contents after deployment." -ForegroundColor Red
+        }
+    } else {
+        Write-Host "ERROR: Source PUC directory not found at: $sourcePucDir" -ForegroundColor Red
+        Write-Host "Please run the script again or manually download the PUC library." -ForegroundColor Red
+    }
+}
 
 # Clean up temp directory
 Remove-Item -Path $tempDir -Recurse -Force

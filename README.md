@@ -65,7 +65,7 @@ Once deployed to GitHub, WordPress sites with this plugin installed will receive
 
 ## Repository Structure
 
-- `autotask-plugin.php`: Main plugin file
+- `autotask-time-entry.php`: Main plugin file
 - `includes/plugin-update-checker/`: Library for handling automatic updates
 - `update-config.php`: GitHub configuration (keep this secure)
 - `deploy.ps1`: PowerShell deployment script

@@ -9,12 +9,12 @@
  *
  * @wordpress-plugin
  * Plugin Name: Autotask Time Entry
- * Plugin URI:  https://github.com/wnearhood/autotask-plugin
+ * Plugin URI:  https://github.com/wnearhood/Autotask-Plugin
  * Description: Integration with Autotask for time entry functionality
  * Version:     1.0.0
  * Author:      William
  * Author URI:  https://example.com
- * Text Domain: autotask-plugin
+ * Text Domain: autotask-time-entry
  * License:     GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
  */
@@ -49,7 +49,7 @@ class Autotask_Time_Entry {
             'Autotask Time Entry', 
             'Time Entry', 
             'manage_options', 
-            'autotask-plugin', 
+            'autotask-time-entry', 
             array($this, 'display_admin_page'), 
             'dashicons-clock',
             30
@@ -81,15 +81,34 @@ class Autotask_Time_Entry {
             return;
         }
         
-        // Include Plugin Update Checker library
-        require_once plugin_dir_path(__FILE__) . 'includes/plugin-update-checker/plugin-update-checker.php';
+        // Define the main plugin-update-checker file path
+        $puc_main_file = plugin_dir_path(__FILE__) . 'includes/plugin-update-checker/plugin-update-checker.php';
+        
+        // Check if the file exists
+        if (!file_exists($puc_main_file)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Autotask Time Entry: Plugin Update Checker file not found at: ' . $puc_main_file);
+            }
+            return;
+        }
         
         try {
+            // Include the update checker library
+            require_once $puc_main_file;
+            
+            // Check if the required class exists
+            if (!class_exists('Puc_v4_Factory')) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('Autotask Time Entry: Puc_v4_Factory class not found after including plugin-update-checker.php');
+                }
+                return;
+            }
+            
             // Configure the update checker
             $updateChecker = Puc_v4_Factory::buildUpdateChecker(
-                'https://github.com/wnearhood/autotask-plugin',
+                'https://github.com/wnearhood/Autotask-Plugin',
                 __FILE__,
-                'autotask-plugin'
+                'autotask-time-entry'
             );
             
             // Set the branch that contains the stable release

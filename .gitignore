@@ -27,3 +27,5 @@ Thumbs.db
 *.tmp
 *.bak
 *.swp
+
+update-config.php
