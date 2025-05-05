@@ -11,7 +11,7 @@
  * Plugin Name: Autotask Time Entry
  * Plugin URI:  https://github.com/wnearhood/Autotask-Plugin
  * Description: Integration with Autotask for time entry functionality
- * Version:     1.0.0
+ * Version:     1.0.4
  * Author:      William
  * Author URI:  https://example.com
  * Text Domain: autotask-time-entry
@@ -25,7 +25,7 @@ if (!defined('WPINC')) {
 }
 
 // Define plugin version
-define('AUTOTASK_TIME_ENTRY_VERSION', '1.0.0');
+define('AUTOTASK_TIME_ENTRY_VERSION', '1.0.4');
 
 /**
  * The core plugin class
@@ -38,7 +38,7 @@ class Autotask_Time_Entry {
         add_action('admin_menu', array($this, 'add_admin_menu'));
         
         // Initialize updater
-        $this->init_updater();
+        add_action('admin_init', array($this, 'init_updater'));
     }
     
     /**
@@ -67,6 +67,15 @@ class Autotask_Time_Entry {
                 <h2>Autotask Time Entry</h2>
                 <p>Version: <?php echo AUTOTASK_TIME_ENTRY_VERSION; ?></p>
                 <p>This plugin will provide integration with Autotask for time entry functionality.</p>
+                
+                <?php
+                // Display update information if available
+                if (class_exists('Puc_v5_Factory') || class_exists('YahnisElsts\PluginUpdateChecker\v5\PucFactory') || class_exists('Puc_v4_Factory')) {
+                    echo '<p style="color: green;">✓ Update checker is active.</p>';
+                } else {
+                    echo '<p style="color: red;">⚠ Update checker not available.</p>';
+                }
+                ?>
             </div>
         </div>
         <?php
@@ -75,7 +84,7 @@ class Autotask_Time_Entry {
     /**
      * Initialize the plugin updater
      */
-    private function init_updater() {
+    public function init_updater() {
         // Only include the updater in admin pages
         if (!is_admin()) {
             return;
@@ -96,44 +105,88 @@ class Autotask_Time_Entry {
             // Include the update checker library
             require_once $puc_main_file;
             
-            // Check if the required class exists
-            if (!class_exists('Puc_v4_Factory')) {
+            // Debug: Check what classes are available
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Autotask Time Entry: Available classes - Puc_v5_Factory: ' . (class_exists('Puc_v5_Factory') ? 'Yes' : 'No') 
+                    . ', YahnisElsts\\PluginUpdateChecker\\v5\\PucFactory: ' . (class_exists('YahnisElsts\\PluginUpdateChecker\\v5\\PucFactory') ? 'Yes' : 'No')
+                    . ', Puc_v4_Factory: ' . (class_exists('Puc_v4_Factory') ? 'Yes' : 'No'));
+            }
+            
+            // Try newer namespace for v5 first
+            if (class_exists('YahnisElsts\\PluginUpdateChecker\\v5\\PucFactory')) {
+                $factory = 'YahnisElsts\\PluginUpdateChecker\\v5\\PucFactory';
+                $updateChecker = $factory::buildUpdateChecker(
+                    'https://github.com/wnearhood/Autotask-Plugin',
+                    __FILE__,
+                    'autotask-time-entry'
+                );
+                
+                $updateChecker->setBranch('main');
+                $this->setup_github_authentication($updateChecker);
+            }
+            // Then try v5 class directly 
+            else if (class_exists('Puc_v5_Factory')) {
+                $updateChecker = Puc_v5_Factory::buildUpdateChecker(
+                    'https://github.com/wnearhood/Autotask-Plugin',
+                    __FILE__,
+                    'autotask-time-entry'
+                );
+                
+                $updateChecker->setBranch('main');
+                $this->setup_github_authentication($updateChecker);
+            }
+            // Fallback to v4
+            else if (class_exists('Puc_v4_Factory')) {
+                $updateChecker = Puc_v4_Factory::buildUpdateChecker(
+                    'https://github.com/wnearhood/Autotask-Plugin',
+                    __FILE__,
+                    'autotask-time-entry'
+                );
+                
+                $updateChecker->setBranch('main');
+                $this->setup_github_authentication($updateChecker);
+            }
+            else {
                 if (defined('WP_DEBUG') && WP_DEBUG) {
-                    error_log('Autotask Time Entry: Puc_v4_Factory class not found after including plugin-update-checker.php');
-                }
-                return;
-            }
-            
-            // Configure the update checker
-            $updateChecker = Puc_v4_Factory::buildUpdateChecker(
-                'https://github.com/wnearhood/Autotask-Plugin',
-                __FILE__,
-                'autotask-time-entry'
-            );
-            
-            // Set the branch that contains the stable release
-            $updateChecker->setBranch('main');
-            
-            // Optional: If you use a private repository
-            $config_file = plugin_dir_path(__FILE__) . 'update-config.php';
-            if (file_exists($config_file)) {
-                include $config_file;
-                if (defined('GITHUB_ACCESS_TOKEN') && !empty(GITHUB_ACCESS_TOKEN)) {
-                    $updateChecker->setAuthentication(GITHUB_ACCESS_TOKEN);
+                    error_log('Autotask Time Entry: Plugin Update Checker classes not found. Checking available classes...');
                     
-                    // For Fine-Grained PATs, modify authentication to use Bearer token
-                    add_filter('http_request_args', function($args, $url) {
-                        if (strpos($url, 'api.github.com') !== false && defined('GITHUB_ACCESS_TOKEN')) {
-                            $args['headers']['Authorization'] = 'Bearer ' . GITHUB_ACCESS_TOKEN;
-                        }
-                        return $args;
-                    }, 10, 2);
+                    // Check what classes are declared in the file
+                    $content = file_get_contents($puc_main_file);
+                    preg_match_all('/class\s+(\w+)/', $content, $matches);
+                    error_log('Classes found in plugin-update-checker.php: ' . print_r($matches[1], true));
+                    
+                    // Check what's being included
+                    preg_match_all('/include\s+[\'"](.+?)[\'"]/', $content, $includes);
+                    error_log('Files included in plugin-update-checker.php: ' . print_r($includes[1], true));
                 }
             }
+            
         } catch (Exception $e) {
             // Simple error logging
             if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('Autotask Time Entry: Error setting up updater: ' . $e->getMessage());
+            }
+        }
+    }
+    
+    /**
+     * Set up GitHub authentication for the update checker
+     */
+    private function setup_github_authentication($updateChecker) {
+        // Optional: If you use a private repository
+        $config_file = plugin_dir_path(__FILE__) . 'update-config.php';
+        if (file_exists($config_file)) {
+            include $config_file;
+            if (defined('GITHUB_ACCESS_TOKEN') && !empty(GITHUB_ACCESS_TOKEN)) {
+                $updateChecker->setAuthentication(GITHUB_ACCESS_TOKEN);
+                
+                // For Fine-Grained PATs, modify authentication to use Bearer token
+                add_filter('http_request_args', function($args, $url) {
+                    if (strpos($url, 'api.github.com') !== false && defined('GITHUB_ACCESS_TOKEN')) {
+                        $args['headers']['Authorization'] = 'Bearer ' . GITHUB_ACCESS_TOKEN;
+                    }
+                    return $args;
+                }, 10, 2);
             }
         }
     }
