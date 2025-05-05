@@ -17,7 +17,7 @@ This plugin is designed for easy deployment and automatic updates during develop
 
 1. Clone or download this plugin to your WordPress plugins directory:
    ```
-   wp-content/plugins/autotask-time-entry/
+   wp-content/plugins/autotask-plugin/
    ```
 
 2. Set up your GitHub repository:
@@ -65,7 +65,7 @@ Once deployed to GitHub, WordPress sites with this plugin installed will receive
 
 ## Repository Structure
 
-- `autotask-time-entry.php`: Main plugin file
+- `autotask-plugin.php`: Main plugin file
 - `includes/plugin-update-checker/`: Library for handling automatic updates
 - `update-config.php`: GitHub configuration (keep this secure)
 - `deploy.ps1`: PowerShell deployment script

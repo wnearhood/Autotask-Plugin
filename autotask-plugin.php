@@ -9,12 +9,12 @@
  *
  * @wordpress-plugin
  * Plugin Name: Autotask Time Entry
- * Plugin URI:  https://github.com/wnearhood/autotask-time-entry
+ * Plugin URI:  https://github.com/wnearhood/autotask-plugin
  * Description: Integration with Autotask for time entry functionality
  * Version:     1.0.0
  * Author:      William
  * Author URI:  https://example.com
- * Text Domain: autotask-time-entry
+ * Text Domain: autotask-plugin
  * License:     GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
  */
@@ -49,7 +49,7 @@ class Autotask_Time_Entry {
             'Autotask Time Entry', 
             'Time Entry', 
             'manage_options', 
-            'autotask-time-entry', 
+            'autotask-plugin', 
             array($this, 'display_admin_page'), 
             'dashicons-clock',
             30
@@ -87,9 +87,9 @@ class Autotask_Time_Entry {
         try {
             // Configure the update checker
             $updateChecker = Puc_v4_Factory::buildUpdateChecker(
-                'https://github.com/YOURUSERNAME/autotask-time-entry',
+                'https://github.com/wnearhood/autotask-plugin',
                 __FILE__,
-                'autotask-time-entry'
+                'autotask-plugin'
             );
             
             // Set the branch that contains the stable release

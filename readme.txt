@@ -1,4 +1,4 @@
-=== Autotask Time Entry ===
+=== Autotask Plugin ===
 Contributors: william
 Tags: autotask, time-entry
 Requires at least: 5.0
@@ -14,7 +14,7 @@ Integration with Autotask for time entry functionality.
 This plugin provides integration with Autotask for time entry functionality.
 
 == Installation ==
-1. Upload the plugin files to the `/wp-content/plugins/autotask-time-entry` directory
+1. Upload the plugin files to the `/wp-content/plugins/autotask-plugin` directory
 2. Activate the plugin through the 'Plugins' screen in WordPress
 3. Configure the plugin settings
 

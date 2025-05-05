@@ -16,7 +16,7 @@ param (
 )
 
 # Configuration
-$pluginSlug = "autotask-time-entry"
+$pluginSlug = "autotask-plugin"
 $pluginDir = $PSScriptRoot
 $zipFileName = "$pluginSlug-$Version.zip"
 $buildDir = "$pluginDir\build"
@@ -34,7 +34,7 @@ if (!(Test-Path $distDir)) { New-Item -ItemType Directory -Path $distDir | Out-N
 
 # Update version in main plugin file
 Write-Host "Updating version number in plugin files..." -ForegroundColor Yellow
-$mainFile = "$pluginDir\autotask-time-entry.php"
+$mainFile = "$pluginDir\autotask-plugin.php"
 $readmeFile = "$pluginDir\readme.txt"
 
 # Update in main plugin file
@@ -197,8 +197,8 @@ if ($GitHubToken -and $GitHubUsername -and $GitHubRepo) {
         (Get-Content $configFile) -replace "define\('GITHUB_ACCESS_TOKEN', '.*?'\)", "define('GITHUB_ACCESS_TOKEN', '$GitHubToken')" | Set-Content $configFile
         
         # Update the GitHub URL in the main plugin file
-        (Get-Content $mainFile) -replace "Plugin URI:  https://github.com/YOURUSERNAME/autotask-time-entry", "Plugin URI:  https://github.com/$GitHubUsername/$GitHubRepo" | Set-Content $mainFile
-        (Get-Content $mainFile) -replace "'https://github.com/YOURUSERNAME/autotask-time-entry'", "'https://github.com/$GitHubUsername/$GitHubRepo'" | Set-Content $mainFile
+        (Get-Content $mainFile) -replace "Plugin URI:  https://github.com/[^/]+/[^/\s]+", "Plugin URI:  https://github.com/$GitHubUsername/$GitHubRepo" | Set-Content $mainFile
+        (Get-Content $mainFile) -replace "'https://github.com/[^/]+/[^/\s]+'", "'https://github.com/$GitHubUsername/$GitHubRepo'" | Set-Content $mainFile
         
         Write-Host "`nDeployment completed successfully!" -ForegroundColor Green
         Write-Host "Plugin URI and update source have been updated with your GitHub repository." -ForegroundColor Green
