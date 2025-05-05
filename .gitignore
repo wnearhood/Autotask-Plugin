@@ -1,0 +1,29 @@
+# Deployment and build directories
+/build/
+/dist/
+
+# Dependencies
+/node_modules/
+/vendor/
+
+# Configuration with sensitive data
+# Uncomment in production
+# /update-config.php
+
+# WordPress core files
+wp-config.php
+wp-content/
+wp-admin/
+wp-includes/
+
+# Environment specific
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
