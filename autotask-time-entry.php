@@ -11,7 +11,7 @@
  * Plugin Name: Autotask Time Entry
  * Plugin URI:  https://github.com/wnearhood/Autotask-Plugin
  * Description: Integration with Autotask for time entry functionality
- * Version:     1.0.4
+ * Version:     1.0.15
  * Author:      William
  * Author URI:  https://example.com
  * Text Domain: autotask-time-entry
@@ -24,8 +24,10 @@ if (!defined('WPINC')) {
     die;
 }
 
-// Define plugin version
-define('AUTOTASK_TIME_ENTRY_VERSION', '1.0.4');
+/**
+ * Current plugin version.
+ */
+define('AUTOTASK_TIME_ENTRY_VERSION', '1.0.15');
 
 /**
  * The core plugin class
@@ -39,6 +41,9 @@ class Autotask_Time_Entry {
         
         // Initialize updater
         add_action('admin_init', array($this, 'init_updater'));
+
+        // Add update check button in plugin details
+        add_filter('plugin_row_meta', array($this, 'add_plugin_meta_links'), 10, 2);
     }
     
     /**
@@ -67,11 +72,19 @@ class Autotask_Time_Entry {
                 <h2>Autotask Time Entry</h2>
                 <p>Version: <?php echo AUTOTASK_TIME_ENTRY_VERSION; ?></p>
                 <p>This plugin will provide integration with Autotask for time entry functionality.</p>
-                
+                <p>
+                    <a href="<?php echo esc_url(admin_url('update-core.php')); ?>" class="button button-secondary">
+                        Check for Updates
+                    </a>
+                </p>
                 <?php
                 // Display update information if available
-                if (class_exists('Puc_v5_Factory') || class_exists('YahnisElsts\PluginUpdateChecker\v5\PucFactory') || class_exists('Puc_v4_Factory')) {
-                    echo '<p style="color: green;">✓ Update checker is active.</p>';
+                if (class_exists('YahnisElsts\\PluginUpdateChecker\\v5\\PucFactory')) {
+                    echo '<p style="color: green;">✓ Update checker is active (using YahnisElsts\\PluginUpdateChecker\\v5).</p>';
+                } elseif (class_exists('Puc_v5_Factory')) {
+                    echo '<p style="color: green;">✓ Update checker is active (using Puc_v5_Factory).</p>';
+                } elseif (class_exists('Puc_v4_Factory')) {
+                    echo '<p style="color: green;">✓ Update checker is active (using Puc_v4_Factory).</p>';
                 } else {
                     echo '<p style="color: red;">⚠ Update checker not available.</p>';
                 }
@@ -79,6 +92,16 @@ class Autotask_Time_Entry {
             </div>
         </div>
         <?php
+    }
+    
+    /**
+     * Add links to the plugin row meta
+     */
+    public function add_plugin_meta_links($links, $file) {
+        if (plugin_basename(__FILE__) === $file) {
+            $links[] = '<a href="' . esc_url(admin_url('update-core.php')) . '">Check for Updates</a>';
+        }
+        return $links;
     }
     
     /**
@@ -112,7 +135,7 @@ class Autotask_Time_Entry {
                     . ', Puc_v4_Factory: ' . (class_exists('Puc_v4_Factory') ? 'Yes' : 'No'));
             }
             
-            // Try newer namespace for v5 first
+            // Using namespaced class (newer version)
             if (class_exists('YahnisElsts\\PluginUpdateChecker\\v5\\PucFactory')) {
                 $factory = 'YahnisElsts\\PluginUpdateChecker\\v5\\PucFactory';
                 $updateChecker = $factory::buildUpdateChecker(
@@ -123,6 +146,10 @@ class Autotask_Time_Entry {
                 
                 $updateChecker->setBranch('main');
                 $this->setup_github_authentication($updateChecker);
+                
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('Autotask Time Entry: Using YahnisElsts\\PluginUpdateChecker\\v5\\PucFactory');
+                }
             }
             // Then try v5 class directly 
             else if (class_exists('Puc_v5_Factory')) {
@@ -134,6 +161,10 @@ class Autotask_Time_Entry {
                 
                 $updateChecker->setBranch('main');
                 $this->setup_github_authentication($updateChecker);
+                
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('Autotask Time Entry: Using Puc_v5_Factory');
+                }
             }
             // Fallback to v4
             else if (class_exists('Puc_v4_Factory')) {
@@ -145,6 +176,10 @@ class Autotask_Time_Entry {
                 
                 $updateChecker->setBranch('main');
                 $this->setup_github_authentication($updateChecker);
+                
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('Autotask Time Entry: Using Puc_v4_Factory');
+                }
             }
             else {
                 if (defined('WP_DEBUG') && WP_DEBUG) {

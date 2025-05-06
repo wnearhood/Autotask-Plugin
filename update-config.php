@@ -9,4 +9,4 @@
 
 // GitHub Fine-Grained Personal Access Token
 // Replace with your actual token
-define('GITHUB_ACCESS_TOKEN', 'your-github-token-here');
+define('GITHUB_ACCESS_TOKEN', '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');
