@@ -11,7 +11,7 @@
  * Plugin Name: Autotask Time Entry
  * Plugin URI:  https://github.com/wnearhood/Autotask-Plugin
  * Description: Integration with Autotask for time entry functionality
- * Version:     1.0.20
+ * Version:     1.0.21
  * Author:      William
  * Author URI:  https://example.com
  * Text Domain: autotask-time-entry
@@ -27,7 +27,7 @@ if (!defined('WPINC')) {
 /**
  * Current plugin version.
  */
-define('AUTOTASK_TIME_ENTRY_VERSION', '1.0.20');
+define('AUTOTASK_TIME_ENTRY_VERSION', '1.0.21');
 
 /**
  * The core plugin class
